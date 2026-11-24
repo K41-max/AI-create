@@ -55,6 +55,11 @@
         output.textContent = 'エラー: ' + (e?.message || e);
       }
     };
+      const response = await puter.ai.chat(prompt, {
+      model: "google/gemini-2.5-pro",
+      max_tokens: 65536   // Gemini 2.5 Pro の1リクエストあたりの上限に近い値
+    });
+
 
     // Ctrl+Enter でも送信
     document.getElementById('input').addEventListener('keydown', (e) => {
