@@ -1,24 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Puter.js Gemini 自由入力</title>
+<style>
+  body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+  textarea { width: 100%; height: 120px; font-size: 14px; }
+  select, button { font-size: 14px; padding: 4px 8px; margin-top: 8px; }
+  pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; word-break: break-word; }
+  .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+</style>
+</head>
 <body>
-  <h3>Puter.js + Gemini 2.5 Pro</h3>
-  <button id="ask">質問する</button>
-  <pre id="output"></pre>
+  <h3>Puter.js + Gemini（自由入力）</h3>
+
+  <textarea id="input" placeholder="例：国公立医学部二次レベルの化学の問題を作って。単元は浸透圧。図の仕様もJSONで出して。"></textarea>
+
+  <div class="row">
+    <label>モデル：
+      <select id="model">
+        <option value="google/gemini-2.5-pro" selected>Gemini 2.5 Pro（推論重視）</option>
+        <option value="google/gemini-2.5-flash">Gemini 2.5 Flash（高速）</option>
+        <option value="google/gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="jsonMode"> JSONのみで返す（作問モード）</label>
+    <button id="send">送信</button>
+  </div>
+
+  <pre id="output">ここに応答が表示されます</pre>
 
   <script src="https://js.puter.com/v2/"></script>
   <script>
-    document.getElementById('ask').onclick = async () => {
-      const output = document.getElementById('output');
+    const output = document.getElementById('output');
+
+    document.getElementById('send').onclick = async () => {
+      const raw = document.getElementById('input').value.trim();
+      if (!raw) { output.textContent = '入力が空です'; return; }
+
+      const model = document.getElementById('model').value;
+      const jsonMode = document.getElementById('jsonMode').checked;
+
+      // 作問モードなら「JSONのみ」を強制する前置きを付ける
+      const prompt = jsonMode
+        ? `以下の依頼に対して、**必ずJSONのみ**で出力してください（前後に説明文・コードブロック記号を付けない）。\n\n依頼: ${raw}`
+        : raw;
+
       output.textContent = '考え中...';
-
-      // 初回はブラウザにPuterのログイン画面が表示される
-      const response = await puter.ai.chat(
-        "AIにとって『理解する』とはどういうことか、簡潔に説明して",
-        { model: "google/gemini-2.5-pro" }
-      );
-
-      output.textContent = response;
+      try {
+        const res = await puter.ai.chat(prompt, { model });
+        // Puter.jsの返り値は文字列 or オブジェクト。文字列化して表示
+        output.textContent = typeof res === 'string' ? res : JSON.stringify(res, null, 2);
+      } catch (e) {
+        output.textContent = 'エラー: ' + (e?.message || e);
+      }
     };
+
+    // Ctrl+Enter でも送信
+    document.getElementById('input').addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') document.getElementById('send').click();
+    });
   </script>
 </body>
 </html>
