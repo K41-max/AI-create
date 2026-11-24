@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h3>Puter.js + Gemini 2.5 Pro</h3>
+  <button id="ask">質問する</button>
+  <pre id="output"></pre>
+
+  <script src="https://js.puter.com/v2/"></script>
+  <script>
+    document.getElementById('ask').onclick = async () => {
+      const output = document.getElementById('output');
+      output.textContent = '考え中...';
+
+      // 初回はブラウザにPuterのログイン画面が表示される
+      const response = await puter.ai.chat(
+        "AIにとって『理解する』とはどういうことか、簡潔に説明して",
+        { model: "google/gemini-2.5-pro" }
+      );
+
+      output.textContent = response;
+    };
+  </script>
+</body>
+</html>
